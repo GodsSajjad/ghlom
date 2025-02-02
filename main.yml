@@ -50,12 +50,13 @@ jobs:
     # پیدا کردن مسیر AIDL
     - name: Locate AIDL
       run: |
-        find $HOME/android-sdk -name aidl
+        find $HOME/android-sdk -type f -name aidl
 
     # اضافه کردن AIDL به PATH
     - name: Add AIDL to PATH
       run: |
         echo "$HOME/android-sdk/build-tools/33.0.0" >> $GITHUB_PATH
+        export PATH=$PATH:$HOME/android-sdk/build-tools/33.0.0
 
     # تأیید اضافه شدن AIDL به PATH
     - name: Verify AIDL in PATH

@@ -69,8 +69,3 @@ jobs:
       with:
         name: Kivy-APK
         path: bin/*.apk
-
-      uses: actions/upload-artifact@v4
-      with:
-        name: Kivy-APK
-        path: bin/*.apk

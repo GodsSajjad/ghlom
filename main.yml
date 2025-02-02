@@ -34,9 +34,9 @@ jobs:
         unzip commandlinetools-linux-6609375_latest.zip -d $HOME/Android
         echo "export ANDROID_HOME=$HOME/Android" >> $GITHUB_ENV
         echo "export PATH=$PATH:$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
-        yes | sdkmanager --licenses
-        yes | sdkmanager "platform-tools" "build-tools;33.0.0" "platforms;android-33"  # می‌توانید نسخه‌های مختلف را تغییر دهید
-        yes | sdkmanager "tools"
+        
+        # نصب ابزارهای ضروری SDK و Build Tools (بدون استفاده از yes)
+        sdkmanager "platform-tools" "build-tools;33.0.0" "platforms;android-33"
 
     - name: Build APK
       run: |

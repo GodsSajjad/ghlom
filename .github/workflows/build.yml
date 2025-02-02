@@ -24,7 +24,14 @@ jobs:
         sudo apt install -y python3 python3-pip git zip unzip openjdk-17-jdk
         pip install --upgrade pip
         pip install cython buildozer
-
+    - name: Ceck
+      run: |
+        which sdkmanager || echo "sdkmanager not found"
+        if command -v sdkmanager; then
+          echo "sdkmanager is available"
+        else
+          echo "sdkmanager is missing"
+        fi
     - name: Install Android SDK & AIDL
       run: |
         sudo apt update

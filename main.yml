@@ -31,24 +31,30 @@ jobs:
         mkdir -p $HOME/android-sdk/cmdline-tools
         unzip cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools
 
-        # انتقال به مسیر صحیح در صورت لزوم
         if [ -d "$HOME/android-sdk/cmdline-tools/cmdline-tools" ]; then
           mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
         fi
 
-        # تنظیم متغیرهای محیطی
         echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
         echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
         echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
 
-    - name: Verify SDK Manager Installation
+    - name: Install Android SDK Packages (with AIDL)
       run: |
-        which sdkmanager || echo "sdkmanager not found"
-        sdkmanager --version || echo "sdkmanager is not working"
+        sdkmanager --sdk_root=$HOME/android-sdk \
+          "platform-tools" \
+          "build-tools;33.0.0" \
+          "platforms;android-33" \
+          "cmdline-tools;latest"
 
-    - name: Install Android SDK Packages
+    - name: Verify AIDL Installation
       run: |
-        sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.0" "platforms;android-33"
+        find $HOME/android-sdk -name aidl || echo "AIDL not found"
+        which aidl || echo "AIDL not in PATH"
+
+    - name: Add AIDL to PATH
+      run: |
+        echo "$HOME/android-sdk/build-tools/33.0.0" >> $GITHUB_PATH
 
     - name: Accept SDK Licenses
       run: |
@@ -59,11 +65,6 @@ jobs:
         buildozer -v android debug
 
     - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Kivy-APK
-        path: bin/*.apk
-
       uses: actions/upload-artifact@v4
       with:
         name: Kivy-APK

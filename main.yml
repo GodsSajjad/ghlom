@@ -21,35 +21,49 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt update
-        sudo apt install -y python3 python3-pip git zip unzip openjdk-17-jdk
+        sudo apt install -y python3 python3-pip git zip unzip openjdk-17-jdk wget
         pip install --upgrade pip
         pip install cython buildozer
-    - name: Ceck
+
+    - name: Install Android SDK Command-Line Tools
+      run: |
+        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+        mkdir -p $HOME/android-sdk/cmdline-tools
+        unzip cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools
+
+        # انتقال به مسیر صحیح در صورت لزوم
+        if [ -d "$HOME/android-sdk/cmdline-tools/cmdline-tools" ]; then
+          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
+        fi
+
+        # تنظیم متغیرهای محیطی
+        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
+        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
+        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
+
+    - name: Verify SDK Manager Installation
       run: |
         which sdkmanager || echo "sdkmanager not found"
-        if command -v sdkmanager; then
-          echo "sdkmanager is available"
-        else
-          echo "sdkmanager is missing"
-        fi
-    - name: Install Android SDK & AIDL
+        sdkmanager --version || echo "sdkmanager is not working"
+
+    - name: Install Android SDK Packages
       run: |
-        sudo apt update
-        sudo apt install -y wget unzip
-        # نصب Android SDK
-        wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip
-        unzip commandlinetools-linux-6609375_latest.zip -d $HOME/Android
-        echo "export ANDROID_HOME=$HOME/Android" >> $GITHUB_ENV
-        echo "export PATH=$PATH:$ANDROID_HOME/cmdline-tools/tools/bin:$ANDROID_HOME/platform-tools" >> $GITHUB_ENV
-        
-        # نصب ابزارهای ضروری SDK و Build Tools (بدون استفاده از yes)
-        sdkmanager "platform-tools" "build-tools;33.0.0" "platforms;android-33"
+        sdkmanager --sdk_root=$HOME/android-sdk "platform-tools" "build-tools;33.0.0" "platforms;android-33"
+
+    - name: Accept SDK Licenses
+      run: |
+        yes | sdkmanager --licenses
 
     - name: Build APK
       run: |
         buildozer -v android debug
 
     - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Kivy-APK
+        path: bin/*.apk
+
       uses: actions/upload-artifact@v4
       with:
         name: Kivy-APK

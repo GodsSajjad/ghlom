@@ -49,9 +49,7 @@ jobs:
         sed -i '/^# p4a\.bootstrap =/c\p4a.bootstrap = sdl2' buildozer.spec
 
     - name: Build APK
-      run: |
-        buildozer init
-        buildozer android debug
+      run: buildozer android debug
 
     - name: Upload APK
       uses: actions/upload-artifact@v4

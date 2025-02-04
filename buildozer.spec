@@ -15,21 +15,18 @@ version = 0.1
 requirements = python3,kivy,cython,tensorflow,numpy
 # جهت صفحه نمایش (portrait یا landscape)
 orientation = portrait
-# اجرای برنامه بصورت تمام صفحه (اختیاری)
+# اجرای برنامه به صورت تمام صفحه
 fullscreen = 1
 # نقطه ورود برنامه
 entrypoint = main.py
-# اگر از bootstrap sdl2 استفاده می‌کنید (بسته به نسخه‌ی buildozer ممکن است لازم باشد)
-android.bootstrap = sdl2
+# استفاده از bootstrap مناسب برای اندروید (تغییر نام از android.bootstrap به pla.bootstrap)
+pla.bootstrap = sdl2
 
 # مجوزهای مورد نیاز برای اندروید
 android.permissions = INTERNET
 
-# (اختیاری) تنظیمات آیکون برنامه
-# icon.filename = assets/icon.png
-
 [buildozer]
-# سطح لاگ (می‌تواند 1 تا 2 یا بیشتر باشد)
+# سطح لاگ (مقدار قابل تغییر: 1 تا 2 یا بیشتر)
 log_level = 2
 # هشدار در صورت اجرای buildozer به عنوان کاربر روت
 warn_on_root = 1

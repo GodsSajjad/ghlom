@@ -1,41 +1,59 @@
-name: Build APK with Buildozer
+name: Build Kivy Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Setup Python 3.8
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.8"
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: 3.10  # نسخه پیشنهادی برای Kivy و TensorFlow
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          # نصب ابزارهای ساخت و کامپایل مورد نیاز
-          sudo apt-get install -y build-essential git python3-dev libffi-dev libssl-dev
-          # نصب جاوا (openjdk 8) برای ساخت اندروید
-          sudo apt-get install -y openjdk-8-jdk
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip python3-setuptools python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
+        pip install --upgrade pip
+        pip install --upgrade buildozer cython numpy tensorflow kivy
 
-      - name: Upgrade pip and install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          # نصب buildozer و سایر وابستگی‌های پروژه (tensorflow، kivy، numpy و ...)
-          pip install cython buildozer tensorflow kivy numpy
+    - name: Clean Previous Builds
+      run: |
+        buildozer android clean || true
+        rm -rf .buildozer
 
-      - name: Build APK using Buildozer
-        run: |
-          # پاکسازی build قبلی (اختیاری)
-          buildozer android clean
-          # ساخت نسخه debug از apk
-          buildozer android debug
+    - name: Initialize Buildozer Spec
+      run: |
+        if [ ! -f buildozer.spec ]; then
+          buildozer init
+        fi
+
+    - name: Update Buildozer Spec for TensorFlow and Assets
+      run: |
+        sed -i '/^# requirements =/c\requirements = python3,kivy,numpy,tensorflow' buildozer.spec
+        sed -i '/^# source.include_exts =/c\source.include_exts = py,png,jpg,kv,atlas,ttf,gif' buildozer.spec
+        sed -i '/^# android\.log_level =/c\android.log_level = 2' buildozer.spec
+        sed -i '/^# android\.release =/c\android.release = 0' buildozer.spec
+        sed -i '/^# android\.ndk_api =/c\android.ndk_api = 21' buildozer.spec
+        sed -i '/^# p4a\.bootstrap =/c\p4a.bootstrap = sdl2' buildozer.spec
+
+    - name: Build APK
+      run: buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: NeuralGameApp.apk
+        path: bin/*.apk
+

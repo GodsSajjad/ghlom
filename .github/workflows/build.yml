@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: 3.9
 
     - name: Install Dependencies
       run: |
@@ -30,21 +30,21 @@ jobs:
 
     - name: Install Android SDK and Tools
       run: |
-        sudo apt-get install -y wget unzip
-        mkdir -p ghlom/android-sdk
-        wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O ghlom/android-sdk-tools.zip
-        unzip ghlom/android-sdk-tools.zip -d ghlom/android-sdk/cmdline-tools
-        mv  ghlom/android-sdk/cmdline-tools/cmdline-tools ghlom/android-sdk/cmdline-tools/latest
-        rm ghlom/android-sdk-tools.zip
-        export ANDROID_SDK_ROOT=ghlom/android-sdk
+        sudo apt-get update
+        sudo apt-get install -y wget unzip openjdk-17-jdk
+        mkdir -p $GITHUB_WORKSPACE/android-sdk
+        wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O $GITHUB_WORKSPACE/android-sdk-tools.zip
+        unzip $GITHUB_WORKSPACE/android-sdk-tools.zip -d $GITHUB_WORKSPACE/android-sdk/cmdline-tools
+        rm $GITHUB_WORKSPACE/android-sdk-tools.zip
+        export ANDROID_SDK_ROOT=$GITHUB_WORKSPACE/android-sdk
         export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/tools/bin
         yes | sdkmanager --licenses
         sdkmanager "build-tools;30.0.3" "platform-tools" "platforms;android-30"
 
     - name: Set Environment Variables
       run: |
-        echo "ANDROID_SDK_ROOT=ghlom/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:ghlom/android-sdk/cmdline-tools/latest/bin:ghlom/android-sdk/platform-tools" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$GITHUB_WORKSPACE/android-sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:$GITHUB_WORKSPACE/android-sdk/cmdline-tools/tools/bin" >> $GITHUB_ENV
 
     - name: Clean Previous Builds
       run: |

@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: 3.10
 
     - name: Install Dependencies
       run: |
@@ -31,18 +31,19 @@ jobs:
     - name: Install Android SDK and Tools
       run: |
         sudo apt-get install -y wget unzip
-        wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O android-sdk-tools.zip
-        unzip android-sdk-tools.zip -d /usr/local/lib/android-sdk
-        rm android-sdk-tools.zip
-        export ANDROID_SDK_ROOT=/usr/local/lib/android-sdk
+        mkdir -p $GITHUB_WORKSPACE/android-sdk
+        wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O $GITHUB_WORKSPACE/android-sdk-tools.zip
+        unzip $GITHUB_WORKSPACE/android-sdk-tools.zip -d $GITHUB_WORKSPACE/android-sdk
+        rm $GITHUB_WORKSPACE/android-sdk-tools.zip
+        export ANDROID_SDK_ROOT=$GITHUB_WORKSPACE/android-sdk
         export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/tools/bin
         yes | sdkmanager --licenses
         sdkmanager "build-tools;30.0.3" "platform-tools" "platforms;android-30"
 
     - name: Set Environment Variables
       run: |
-        echo "ANDROID_SDK_ROOT=/usr/local/lib/android-sdk" >> $GITHUB_ENV
-        echo "PATH=$PATH:/usr/local/lib/android-sdk/cmdline-tools/tools/bin" >> $GITHUB_ENV
+        echo "ANDROID_SDK_ROOT=$GITHUB_WORKSPACE/android-sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:$GITHUB_WORKSPACE/android-sdk/cmdline-tools/tools/bin" >> $GITHUB_ENV
 
     - name: Clean Previous Builds
       run: |
@@ -66,8 +67,8 @@ jobs:
 
     - name: Update Buildozer Spec for Android SDK and NDK
       run: |
-        sed -i '/^# android\.sdk_path =/c\android.sdk_path = /usr/local/lib/android-sdk' buildozer.spec
-        sed -i '/^# android\.ndk_path =/c\android.ndk_path = /usr/local/lib/android-sdk/ndk/21.3.6528147' buildozer.spec
+        sed -i '/^# android\.sdk_path =/c\android.sdk_path = $GITHUB_WORKSPACE/android-sdk' buildozer.spec
+        sed -i '/^# android\.ndk_path =/c\android.ndk_path = $GITHUB_WORKSPACE/android-sdk/ndk/21.3.6528147' buildozer.spec
 
     - name: Install aidl
       run: |
@@ -77,7 +78,7 @@ jobs:
       run: buildozer android debug
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: NeuralGameApp.apk
         path: bin/*.apk

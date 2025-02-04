@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'  # نسخه پیشنهادی برای Kivy و TensorFlow
+        python-version: 3.10  # نسخه پیشنهادی برای Kivy و TensorFlow
 
     - name: Install Dependencies
       run: |
@@ -52,7 +52,7 @@ jobs:
       run: buildozer android debug
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: NeuralGameApp.apk
         path: bin/*.apk

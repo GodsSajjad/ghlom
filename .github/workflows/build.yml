@@ -1,79 +1,41 @@
-name: Build Kivy APK
+name: Build APK with Buildozer
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Setup Python 3.8
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
 
-    - name: Install Dependencies
-      run: |
-        sudo apt update
-        sudo apt install -y python3 python3-pip git zip unzip openjdk-17-jdk wget
-        pip install --upgrade pip
-        pip install cython buildozer
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          # نصب ابزارهای ساخت و کامپایل مورد نیاز
+          sudo apt-get install -y build-essential git python3-dev libffi-dev libssl-dev
+          # نصب جاوا (openjdk 8) برای ساخت اندروید
+          sudo apt-get install -y openjdk-8-jdk
 
-    - name: Install Android SDK Command-Line Tools
-      run: |
-        wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-        mkdir -p $HOME/android-sdk/cmdline-tools
-        unzip cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools
+      - name: Upgrade pip and install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # نصب buildozer و سایر وابستگی‌های پروژه (tensorflow، kivy، numpy و ...)
+          pip install cython buildozer tensorflow kivy numpy
 
-        if [ -d "$HOME/android-sdk/cmdline-tools/cmdline-tools" ]; then
-          mv $HOME/android-sdk/cmdline-tools/cmdline-tools $HOME/android-sdk/cmdline-tools/latest
-        fi
-
-        echo "ANDROID_HOME=$HOME/android-sdk" >> $GITHUB_ENV
-        echo "$HOME/android-sdk/cmdline-tools/latest/bin" >> $GITHUB_PATH
-        echo "$HOME/android-sdk/platform-tools" >> $GITHUB_PATH
-
-    - name: Install Android SDK Packages (with AIDL)
-      run: |
-        sdkmanager --sdk_root=$HOME/android-sdk \
-          "platform-tools" \
-          "build-tools;33.0.0" \
-          "platforms;android-33" \
-          "cmdline-tools;latest"
-
-    # پیدا کردن مسیر AIDL
-    - name: Locate AIDL
-      run: |
-        find $HOME/android-sdk -type f -name aidl
-
-    # اضافه کردن AIDL به PATH
-    - name: Add AIDL to PATH
-      run: |
-        echo "$HOME/android-sdk/build-tools/33.0.0" >> $GITHUB_PATH
-        export PATH=$PATH:$HOME/android-sdk/build-tools/33.0.0
-
-    # تأیید اضافه شدن AIDL به PATH
-    - name: Verify AIDL in PATH
-      run: |
-        which aidl || echo "AIDL still not in PATH"
-        aidl --version || echo "Cannot execute AIDL"
-
-    - name: Accept SDK Licenses
-      run: |
-        yes | sdkmanager --licenses
-
-    - name: Build APK
-      run: |
-        buildozer -v android debug
-
-    - name: Upload APK Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: Kivy-APK
-        path: bin/*.apk
+      - name: Build APK using Buildozer
+        run: |
+          # پاکسازی build قبلی (اختیاری)
+          buildozer android clean
+          # ساخت نسخه debug از apk
+          buildozer android debug

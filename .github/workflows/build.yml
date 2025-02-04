@@ -19,7 +19,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'# نسخه پیشنهادی برای Kivy و TensorFlow
+        python-version: 3.10
 
     - name: Install Dependencies
       run: |
@@ -27,6 +27,22 @@ jobs:
         sudo apt-get install -y git zip unzip openjdk-17-jdk python3-pip python3-setuptools python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev
         pip install --upgrade pip
         pip install --upgrade buildozer cython numpy tensorflow kivy
+
+    - name: Install Android SDK and Tools
+      run: |
+        sudo apt-get install -y wget unzip
+        wget https://dl.google.com/android/repository/commandlinetools-linux-6609375_latest.zip -O android-sdk-tools.zip
+        unzip android-sdk-tools.zip -d /usr/local/lib/android-sdk
+        rm android-sdk-tools.zip
+        export ANDROID_SDK_ROOT=/usr/local/lib/android-sdk
+        export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/tools/bin
+        yes | sdkmanager --licenses
+        sdkmanager "build-tools;30.0.3" "platform-tools" "platforms;android-30"
+
+    - name: Set Environment Variables
+      run: |
+        echo "ANDROID_SDK_ROOT=/usr/local/lib/android-sdk" >> $GITHUB_ENV
+        echo "PATH=$PATH:/usr/local/lib/android-sdk/cmdline-tools/tools/bin" >> $GITHUB_ENV
 
     - name: Clean Previous Builds
       run: |
@@ -48,12 +64,20 @@ jobs:
         sed -i '/^# android\.ndk_api =/c\android.ndk_api = 21' buildozer.spec
         sed -i '/^# p4a\.bootstrap =/c\p4a.bootstrap = sdl2' buildozer.spec
 
+    - name: Update Buildozer Spec for Android SDK and NDK
+      run: |
+        sed -i '/^# android\.sdk_path =/c\android.sdk_path = /usr/local/lib/android-sdk' buildozer.spec
+        sed -i '/^# android\.ndk_path =/c\android.ndk_path = /usr/local/lib/android-sdk/ndk/21.3.6528147' buildozer.spec
+
+    - name: Install aidl
+      run: |
+        sudo apt-get install -y android-sdk-build-tools
+
     - name: Build APK
       run: buildozer android debug
 
     - name: Upload APK
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: NeuralGameApp.apk
         path: bin/*.apk
-
